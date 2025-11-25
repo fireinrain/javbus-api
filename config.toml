@@ -1,0 +1,37 @@
+############################################
+# Application Configuration (TOML Version)
+############################################
+
+[server]
+# 服务器端口号
+DEBUG_LEVEL = "prod"
+SERVER_PORT = 3000
+
+
+[proxy]
+# 代理配置
+# HTTP代理地址，格式必须以 http://, https://, socks:// 或 socks5:// 开头
+HTTP_PROXY = ""
+
+# HTTPS代理地址，格式必须以 http://, https://, socks:// 或 socks5:// 开头
+HTTPS_PROXY = ""
+
+# SOCKS5代理地址，格式必须以 socks:// 或 socks5:// 开头
+SOCKS5_PROXY = ""
+
+
+[admin]
+# 管理员配置
+ADMIN_USERNAME = "admin"
+
+# 管理员密码
+ADMIN_PASSWORD = "password123"
+
+
+[auth]
+# 认证配置
+# javbus-api 认证token
+JAVBUS_JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+
+# 会话密钥
+JAVBUS_SESSION_SECRET = "javbus-api-session-secret"
