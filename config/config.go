@@ -35,11 +35,19 @@ type AuthConfig struct {
 	JavbusSessionSecret string `mapstructure:"javbus_session_secret"`
 }
 
+type DatabaseConfig struct {
+	DBType       string `mapstructure:"db_type"`
+	DBServerPath string `mapstructure:"db_server_path"`
+	MaxOpenConns int    `mapstructure:"max_open_conns"`
+	MaxIdleConns int    `mapstructure:"max_idle_conns"`
+}
+
 type Config struct {
-	Server ServerConfig `mapstructure:"server"`
-	Proxy  ProxyConfig  `mapstructure:"proxy"`
-	Admin  AdminConfig  `mapstructure:"admin"`
-	Auth   AuthConfig   `mapstructure:"auth"`
+	Server   ServerConfig   `mapstructure:"server"`
+	Proxy    ProxyConfig    `mapstructure:"proxy"`
+	Admin    AdminConfig    `mapstructure:"admin"`
+	Auth     AuthConfig     `mapstructure:"auth"`
+	DATABASE DatabaseConfig `mapstructure:"database"`
 }
 
 var GlobalConfig *Config
@@ -51,7 +59,7 @@ var (
 // ==========================================
 // 加载配置 (支持 TOML)
 // ==========================================
-func LoadConfig() (*Config, error) {
+func InitConfig() (*Config, error) {
 	// 1. 加载 .env
 	_ = godotenv.Load()
 
@@ -89,6 +97,7 @@ func LoadConfig() (*Config, error) {
 	if err := validate(&config); err != nil {
 		return nil, err
 	}
+	GlobalConfig = &config
 
 	return &config, nil
 }
@@ -111,12 +120,4 @@ func validate(c *Config) error {
 	}
 
 	return nil
-}
-
-func init() {
-	config, err := LoadConfig()
-	if err != nil {
-		panic(fmt.Sprintf("加载配置失败: %v", err))
-	}
-	GlobalConfig = config
 }

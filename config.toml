@@ -35,3 +35,23 @@ JAVBUS_JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
 # 会话密钥
 JAVBUS_SESSION_SECRET = "javbus-api-session-secret"
+
+############################################
+# Database Configuration
+############################################
+
+[database]
+# 数据库类型: "sqlite", "mysql", "postgres"
+DB_TYPE = "sqlite"
+
+# DSN，根据不同数据库填写
+# sqlite 示例: "./data/app.db"
+# mysql 示例: "user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+# postgresql 示例: "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+DB_SERVER_PATH = "./data/app.db"
+
+# 最大连接数（MySQL/PostgreSQL有效）
+MAX_OPEN_CONNS = 50
+
+# 最大空闲连接数（MySQL/PostgreSQL有效）
+MAX_IDLE_CONNS = 10

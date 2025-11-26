@@ -22,3 +22,15 @@ func FormatImageURL(url string) string {
 
 	return url
 }
+
+// 获取 SQLite 文件所在目录
+func GetFileDir(filePath string) string {
+	if idx := len(filePath) - 1; idx >= 0 {
+		for i := len(filePath) - 1; i >= 0; i-- {
+			if filePath[i] == '/' || filePath[i] == '\\' {
+				return filePath[:i]
+			}
+		}
+	}
+	return ""
+}
