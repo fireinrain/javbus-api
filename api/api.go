@@ -158,6 +158,7 @@ func RunApiServer(cfg *config.Config) {
 		// 假设你有这样的路由：
 		// api.GET("/movies", handler.GetMovies)
 		// api.GET("/movies/:id", handler.GetMovieDetail)
+		RegisterRoutes(api, cfg)
 	}
 
 	// 404 处理 (NoRoute)

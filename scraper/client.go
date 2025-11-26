@@ -96,6 +96,7 @@ func NewHTTPClient(cfg *config.Config) *http.Client {
 func NewRestyClient(cfg *config.Config) *resty.Client {
 	// 创建resty客户端实例
 	client := resty.New()
+	client.SetTimeout(consts.JavBusTimeout)
 
 	proxyStr := cfg.Proxy.HttpProxy
 	if proxyStr != "" {

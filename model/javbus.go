@@ -62,32 +62,32 @@ type ImageSize struct {
 // ==========================================
 
 type Movie struct {
-	Date  *string  `json:"date"` // nullable
+	Date  string   `json:"date"` // nullable
 	Title string   `json:"title"`
 	ID    string   `json:"id"`
-	Img   *string  `json:"img"` // nullable
+	Img   string   `json:"img"` // nullable
 	Tags  []string `json:"tags"`
 }
 
 type SimilarMovie struct {
-	ID    string  `json:"id"`
-	Title string  `json:"title"`
-	Img   *string `json:"img"` // nullable
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Img   string `json:"img"` // nullable
 }
 
 type Sample struct {
-	Alt       *string `json:"alt"` // nullable
-	ID        string  `json:"id"`
-	Thumbnail string  `json:"thumbnail"`
-	Src       *string `json:"src"` // nullable
+	Alt       string `json:"alt"` // nullable
+	ID        string `json:"id"`
+	Thumbnail string `json:"thumbnail"`
+	Src       string `json:"src"` // nullable
 }
 
 type MovieDetail struct {
 	ID            string         `json:"id"`
 	Title         string         `json:"title"`
-	Img           *string        `json:"img"`         // nullable
-	Date          *string        `json:"date"`        // nullable
-	VideoLength   *int           `json:"videoLength"` // nullable
+	Img           string         `json:"img"`         // nullable
+	Date          string         `json:"date"`        // nullable
+	VideoLength   int            `json:"videoLength"` // nullable
 	Director      *Property      `json:"director"`    // nullable
 	Producer      *Property      `json:"producer"`    // nullable
 	Publisher     *Property      `json:"publisher"`   // nullable
@@ -97,8 +97,8 @@ type MovieDetail struct {
 	ImageSize     *ImageSize     `json:"imageSize"` // nullable
 	Samples       []Sample       `json:"samples"`
 	SimilarMovies []SimilarMovie `json:"similarMovies"`
-	GID           *string        `json:"gid"` // nullable
-	UC            *string        `json:"uc"`  // nullable
+	GID           string         `json:"gid"` // nullable
+	UC            string         `json:"uc"`  // nullable
 }
 
 // ==========================================
@@ -106,14 +106,14 @@ type MovieDetail struct {
 // ==========================================
 
 type Magnet struct {
-	ID          string  `json:"id"`
-	Link        string  `json:"link"`
-	IsHD        bool    `json:"isHD"`
-	Title       string  `json:"title"`
-	Size        *string `json:"size"`       // nullable
-	NumberSize  *int64  `json:"numberSize"` // nullable (Go int64 is safer for file sizes)
-	ShareDate   *string `json:"shareDate"`  // nullable
-	HasSubtitle bool    `json:"hasSubtitle"`
+	ID          string `json:"id"`
+	Link        string `json:"link"`
+	IsHD        bool   `json:"isHD"`
+	Title       string `json:"title"`
+	Size        string `json:"size"`       // nullable
+	NumberSize  int64  `json:"numberSize"` // nullable (Go int64 is safer for file sizes)
+	ShareDate   string `json:"shareDate"`  // nullable
+	HasSubtitle bool   `json:"hasSubtitle"`
 }
 
 // ==========================================
@@ -121,24 +121,24 @@ type Magnet struct {
 // ==========================================
 
 type StarInfo struct {
-	Avatar   *string `json:"avatar"` // nullable
-	ID       string  `json:"id"`
-	Name     string  `json:"name"`
-	Birthday *string `json:"birthday"` // nullable
-	Age      *int    `json:"age"`      // nullable
-	Height   *int    `json:"height"`   // nullable
+	Avatar   string `json:"avatar"` // nullable
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Birthday string `json:"birthday"` // nullable
+	Age      int    `json:"age"`      // nullable
+	Height   int    `json:"height"`   // nullable
 
 	// 胸围
-	Bust *string `json:"bust"` // nullable
+	Bust string `json:"bust"` // nullable
 
 	// 腰围
-	Waistline *string `json:"waistline"` // nullable
+	Waistline string `json:"waistline"` // nullable
 
 	// 臀围
-	Hipline *string `json:"hipline"` // nullable
+	Hipline string `json:"hipline"` // nullable
 
-	Birthplace *string `json:"birthplace"` // nullable
-	Hobby      *string `json:"hobby"`      // nullable
+	Birthplace string `json:"birthplace"` // nullable
+	Hobby      string `json:"hobby"`      // nullable
 }
 
 // ==========================================
@@ -148,13 +148,22 @@ type StarInfo struct {
 type Pagination struct {
 	CurrentPage int   `json:"currentPage"`
 	HasNextPage bool  `json:"hasNextPage"`
-	NextPage    *int  `json:"nextPage"` // nullable
+	NextPage    int   `json:"nextPage"` // nullable
 	Pages       []int `json:"pages"`
 }
 
+// 新增 FilterInfo 结构体
+type FilterInfo struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+// 修改 MoviesPage，增加 Filter 字段
 type MoviesPage struct {
-	Movies     []Movie    `json:"movies"`
-	Pagination Pagination `json:"pagination"`
+	Movies     []Movie     `json:"movies"`
+	Pagination Pagination  `json:"pagination"`
+	Filter     *FilterInfo `json:"filter,omitempty"` // 新增字段
 }
 
 // SearchMoviesPage 组合了 MoviesPage (类似于 TypeScript 的 extend)
@@ -173,4 +182,10 @@ type GetMoviesQuery struct {
 	Magnet      MagnetType `form:"magnet" json:"magnet"`
 	FilterType  FilterType `form:"filterType" json:"filterType"`
 	FilterValue string     `form:"filterValue" json:"filterValue"`
+}
+
+// javbus访问状态
+type JavbusAccessStatus struct {
+	Access  bool   `json:"access"`
+	Message string `json:"message"`
 }
