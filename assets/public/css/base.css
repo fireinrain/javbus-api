@@ -1,0 +1,154 @@
+/* 基础变量定义 */
+:root {
+    --primary-color: #3498db;
+    --primary-dark: #2980b9;
+    --secondary-color: #2ecc71;
+    --text-color: #333333;
+    --text-light: #666666;
+    --background-color: #f8f9fa;
+    --card-color: #ffffff;
+    --border-color: #e1e4e8;
+    --error-color: #e74c3c;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* 全局样式 */
+body {
+    display: flex;
+    justify-content: center;
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    background-color: var(--background-color);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    margin: 12px 0;
+    line-height: 1.6;
+    color: var(--text-light);
+}
+
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+    transition: var(--transition);
+}
+
+a:hover {
+    text-decoration: none;
+    color: var(--primary-dark);
+}
+
+.container {
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.title {
+    margin: 0 0 24px 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.card {
+    background-color: var(--card-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    padding: 32px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+/* 按钮样式 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 标签样式 */
+.tag {
+    background-color: #ecf0f1;
+    color: var(--text-light);
+    display: inline-block;
+    border-radius: 50px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin: 0 4px;
+    transition: var(--transition);
+}
+
+.tag:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* 列表样式 */
+.list {
+    margin: 20px 0;
+    padding-left: 24px;
+}
+
+.list li {
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .title {
+        font-size: 2rem;
+    }
+
+    .card {
+        padding: 24px 16px;
+    }
+}

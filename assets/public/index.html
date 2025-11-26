@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JavBus API</title>
+  <link rel="icon" href="/public/favicon.png" sizes="32x32"/>
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="/public/css/normalize.css"/>
+  <link rel="stylesheet" href="/public/css/base.css"/>
+
+  <style>
+      /* 页面背景 */
+      body {
+          background: linear-gradient(135deg, #e8f0ff, #f8fbff 40%, #ffffff);
+          min-height: 100vh;
+          padding: 0;
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      }
+
+      .container {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 40px 20px;
+      }
+
+      /* 顶部用户栏 */
+      .user-wrapper {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          display: flex;
+          align-items: center;
+          padding: 10px 20px;
+          border-radius: 16px;
+          backdrop-filter: blur(10px);
+          background: rgba(255, 255, 255, 0.6);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          z-index: 20;
+      }
+
+      .btn {
+          padding: 10px 20px;
+          border-radius: 12px;
+          border: none;
+          background: var(--primary-color);
+          color: white;
+          cursor: pointer;
+          transition: 0.25s;
+          text-decoration: none;
+          display: inline-block;
+      }
+
+      .btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(52, 152, 219, 0.35);
+          background: var(--primary-dark);
+      }
+
+      /* Hero 区域 */
+      .hero-section {
+          text-align: center;
+          margin-bottom: 40px;
+          padding-top: 40px;
+      }
+
+      .hero-section h1 {
+          font-size: 2.6rem;
+          margin-bottom: 16px;
+          color: var(--primary-dark);
+      }
+
+      .hero-section p {
+          font-size: 1.2rem;
+          margin-bottom: 24px;
+          color: #555;
+      }
+
+      /* 卡片 */
+      .card {
+          background: white;
+          padding: 32px;
+          border-radius: 20px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+          margin-bottom: 32px;
+      }
+
+      .api-section h2 {
+          margin-bottom: 24px;
+          display: flex;
+          align-items: center;
+          font-size: 1.6rem;
+      }
+
+      .api-section h2::before {
+          content: "📡";
+          margin-right: 10px;
+      }
+
+      /* API 项目 */
+      .api-item {
+          margin-bottom: 32px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid #eee;
+      }
+
+      .api-item:last-child {
+          border-bottom: none;
+      }
+
+      .api-item h3 {
+          font-size: 1.2rem;
+          margin-bottom: 8px;
+          color: var(--primary-dark);
+      }
+
+      .api-item p {
+          margin: 6px 0 12px 0;
+          color: #444;
+      }
+
+      /* API 链接按钮 */
+      .api-link {
+          display: block;
+          background: #f1f7ff;
+          padding: 12px 16px;
+          border-radius: 12px;
+          border-left: 4px solid var(--primary-color);
+          margin-bottom: 8px;
+          text-decoration: none;
+          color: var(--primary-dark);
+          transition: 0.25s;
+          word-break: break-all;
+      }
+
+      .api-link:hover {
+          background: #e4f0ff;
+          transform: translateX(5px);
+      }
+
+      .list li {
+          list-style: none;
+          margin: 6px 0;
+      }
+
+      @media (max-width: 600px) {
+          .card {
+              padding: 20px;
+          }
+
+          .hero-section h1 {
+              font-size: 2.2rem;
+          }
+      }
+  </style>
+</head>
+
+<body>
+
+<!-- 顶部用户栏 -->
+<div class="user-wrapper">
+  <div class="login"><a class="btn" href="/public/login.html">登录</a></div>
+  <div class="user" style="display:none;">
+<span class="username" style="
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(52, 152, 219, 0.5); /* 颜色淡一点，突出不可点击 */
+  color: black; /* 灰色文字表示禁用 */
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  cursor: not-allowed; /* 鼠标变成禁止符号 */
+  pointer-events: none; /* 禁止所有鼠标事件 */
+  transition: 0.25s;
+
+"></span>
+    <div style="width:1px;height:18px;background:#ccc;margin:0 12px;"></div>
+    <button class="btn logout">退出</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero-section">
+    <h1>JavBus API</h1>
+    <p>RESTful API 服务，提供影片数据与磁力链接。如果您看到这个页面，说明服务正常运行！</p>
+    <a class="btn" href="https://github.com/ovnrain/javbus-api#readme" target="_blank">查看完整文档</a>
+  </div>
+
+  <!-- API 区域 -->
+  <div class="card api-section">
+    <h2>API 示例</h2>
+
+    <div class="api-item">
+      <h3>获取影片列表</h3>
+      <p>获取第一页影片（含磁力）：</p>
+      <a class="api-link" href="/api/movies">/api/movies</a>
+
+      <p>按演员筛选：</p>
+      <a class="api-link" href="/api/movies?filterType=star&filterValue=qs6&magnet=all">
+        /api/movies?filterType=star&filterValue=qs6&magnet=all
+      </a>
+    </div>
+
+    <div class="api-item">
+      <h3>搜索影片</h3>
+      <p>搜索“三上”：</p>
+      <a class="api-link" href="/api/movies/search?keyword=三上">
+        /api/movies/search?keyword=三上
+      </a>
+    </div>
+
+    <div class="api-item">
+      <h3>影片详情</h3>
+      <p>示例：</p>
+      <ul class="list">
+        <li><a class="api-link" href="/api/movies/IPX-585">IPX-585</a></li>
+        <li><a class="api-link" href="/api/movies/IPZZ-023">IPZZ-023</a></li>
+        <li><a class="api-link" href="/api/movies/IPX-451">IPX-451</a></li>
+      </ul>
+    </div>
+
+    <div class="api-item">
+      <h3>磁力链接</h3>
+      <p>示例：</p>
+      <ul class="list">
+        <li><a class="api-link" href="/api/magnets/JUQ-434?gid=56326057355&uc=0">JUQ-434</a></li>
+        <li><a class="api-link" href="/api/magnets/IPZZ-135?gid=56327757424&uc=0">IPZZ-135</a></li>
+        <li>
+          <a class="api-link" href="/api/magnets/SSNI-730?gid=42785257471&uc=0">SSNI-730</a>
+          <ul class="list">
+            <li><a class="api-link" href="/api/magnets/SSNI-730?...&sortBy=date&sortOrder=desc">按日期降序</a></li>
+            <li><a class="api-link" href="/api/magnets/SSNI-730?...&sortBy=size&sortOrder=asc">按大小升序</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function () {
+    const user = document.querySelector('.user');
+    const username = document.querySelector('.username');
+    const login = document.querySelector('.login');
+    const logoutBtn = document.querySelector('.logout');
+
+    fetch('/api/user')
+      .then(res => res.json())
+      .then(res => {
+        if (res.username) {
+          username.textContent = res.username;
+          user.style.display = "flex";
+          login.style.display = "none";
+        }
+      });
+
+    logoutBtn.addEventListener('click', () => {
+      fetch('/api/logout', {method: 'POST'})
+        .then(() => location.reload());
+    });
+  })();
+</script>
+</body>
+</html>

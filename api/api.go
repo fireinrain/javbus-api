@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/fireinrain/javbus-api/assets"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
@@ -26,13 +27,31 @@ func RunApiServer(cfg *config.Config) {
 
 	r := gin.Default()
 
-	// 2. 静态文件服务 (对应 app.use(express.static('public')))
-	r.Static("/public", "./public")
-	// 如果希望根路径直接访问 public 下的文件 (如 /login.html)，可以这样：
-	r.StaticFile("/", "./public/index.html")
-	r.StaticFile("/login.html", "./public/login.html")
-	// 注意：Gin 的 Static 并不像 Express 那样具备"穿透性" (NotFound 后继续)，
-	// 所以通常建议明确指定静态路由，或者放在 API 路由之后处理 404。
+	// 使用内嵌的静态文件系统替代直接文件路径
+	fs := assets.GetFileSystem()
+	// 静态文件服务 - 使用内嵌资源
+	r.StaticFS("/public", fs)
+
+	// 提供根路径访问index.html
+	r.GET("/", func(c *gin.Context) {
+		// 尝试直接从内嵌文件系统读取index.html
+		content, err := assets.GetFileContent("index.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load index.html")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", content)
+	})
+
+	// 提供login.html访问
+	r.GET("/login.html", func(c *gin.Context) {
+		content, err := assets.GetFileContent("login.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load login.html")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", content)
+	})
 
 	// 3. Session 设置 (对应 express-session + memorystore)
 	// 使用 memstore (内存存储)，生产环境建议换成 redis

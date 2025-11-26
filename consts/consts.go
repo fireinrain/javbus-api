@@ -1,6 +1,9 @@
-package model
+package consts
 
-import "time"
+import (
+	"regexp"
+	"time"
+)
 
 const (
 	JavBusURL = "https://www.javbus.com"
@@ -12,3 +15,7 @@ const (
 
 	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
 )
+
+// PageReg 用于校验页码: 必须以 1-9 开头，后面跟任意数字
+// 对应 TS: /^[1-9]\d*$/
+var PageReg = regexp.MustCompile(`^[1-9]\d*$`)

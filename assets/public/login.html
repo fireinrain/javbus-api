@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>访问登录 - JavBus API</title>
+  <link rel="icon" href="/public/favicon.png" sizes="32x32" />
+  <link rel="stylesheet" href="/public/css/normalize.css" />
+  <style>
+      :root {
+          --primary-color: #3498db;
+          --primary-dark: #2476b2;
+          --background-gradient: linear-gradient(135deg, #e0f2ff, #f5f9ff);
+          --card-bg: rgba(255, 255, 255, 0.55);
+          --card-border: rgba(255, 255, 255, 0.35);
+          --input-bg: rgba(255, 255, 255, 0.75);
+          --input-border: rgba(0,0,0,0.12);
+          --shadow-strong: 0 25px 55px rgba(0,0,0,0.15);
+          --transition: 0.35s cubic-bezier(.4,0,.2,1);
+      }
+
+      body {
+          margin: 0;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--background-gradient);
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial;
+          animation: fadeIn 1s ease;
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      /* 卡片主体 */
+      .login-card {
+          width: min(90%, 520px);
+          padding: 48px 40px;
+          border-radius: 22px;
+          background: var(--card-bg);
+          border: 1px solid var(--card-border);
+          backdrop-filter: blur(22px);
+          box-shadow: var(--shadow-strong);
+          animation: cardAppear 0.8s ease;
+      }
+
+      @keyframes cardAppear {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+      }
+
+      .login-header {
+          text-align: center;
+          margin-bottom: 32px;
+      }
+
+      .login-title {
+          font-size: 2.4rem;
+          color: var(--primary-color);
+          margin: 0;
+          font-weight: 700;
+          letter-spacing: 1px;
+      }
+
+      .login-header p {
+          margin: 8px 0 0;
+          color: #444;
+          font-size: 1rem;
+      }
+
+      /* 表单组 */
+      .form-group {
+          margin-bottom: 22px;
+          position: relative; /* 修复图标漂移 */
+      }
+
+
+
+      .form-label {
+          font-size: 0.92rem;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 6px;
+          display: block;
+      }
+
+      /* 输入框 */
+      .form-input {
+          width: 80%;
+          height: 48px;
+          border-radius: 12px;
+          padding: 0 56px 0 16px; /* 增加右侧 padding，避免贴边 */
+          border: 1px solid var(--input-border);
+          background: var(--input-bg);
+          font-size: 1rem;
+          transition: var(--transition);
+          outline: none;
+      }
+
+
+      .form-input:hover {
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+      }
+
+      .form-input:focus {
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.26);
+          background: #fff;
+      }
+
+      /* 输入框右侧图标 */
+      .form-group::after {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 1.1rem;
+          color: #999;
+          pointer-events: none;
+      }
+
+      /* 按钮 */
+      .form-button {
+          width: 100%;
+          height: 50px;
+          border: none;
+          border-radius: 12px;
+          background: var(--primary-color);
+          color: white;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: var(--transition);
+      }
+
+      .form-button:hover:not(:disabled) {
+          background: var(--primary-dark);
+          transform: translateY(-3px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+      }
+
+      .form-button:active {
+          transform: translateY(0);
+      }
+
+      /* 错误提示 */
+      .error-message {
+          background: #ffe8e8;
+          color: #d63031;
+          padding: 12px 16px;
+          border-radius: 12px;
+          border-left: 4px solid #d63031;
+          margin-bottom: 20px;
+          display: none;
+      }
+
+      .error-message.show { display: block; }
+
+      .back-to-home {
+          margin-top: 22px;
+          text-align: center;
+      }
+
+      .back-link {
+          color: var(--primary-color);
+          font-size: 0.95rem;
+          text-decoration: none;
+          transition: 0.25s;
+      }
+
+      .back-link:hover {
+          text-decoration: underline;
+          letter-spacing: 0.5px;
+      }
+
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-header">
+    <h1 class="login-title">访问登录</h1>
+    <p>请输入您的用户名和密码</p>
+  </div>
+
+  <form class="login-form" action="">
+    <div class="error-message"></div>
+
+    <div class="form-group">
+      <label class="form-label" for="username">用户名</label>
+      <input class="form-input" id="username" type="text" name="username" placeholder="请输入用户名" autofocus />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="password">密码</label>
+      <input class="form-input" id="password" type="password" name="password" placeholder="请输入密码" />
+    </div>
+
+    <button class="form-button" type="submit">登录</button>
+
+    <div class="back-to-home">
+      <a class="back-link" href="/">返回首页</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function () {
+    const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+    const form = document.querySelector('.login-form');
+    const errorMessage = document.querySelector('.error-message');
+    const button = document.querySelector('.form-button');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+
+    function showError(text) {
+      errorMessage.textContent = text;
+      errorMessage.classList.add('show');
+    }
+
+    function hideError() {
+      errorMessage.textContent = '';
+      errorMessage.classList.remove('show');
+    }
+
+    function validateForm() {
+      hideError();
+      if (!usernameInput.value.trim()) { showError('请输入用户名'); return false; }
+      if (!passwordInput.value) { showError('请输入密码'); return false; }
+      return true;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!validateForm()) return;
+
+      button.setAttribute('disabled', true);
+      button.textContent = '登录中...';
+
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: usernameInput.value.trim(), password: passwordInput.value })
+      })
+        .then(res => res.json())
+        .then(res => {
+          if (!res.success) {
+            showError('用户名或密码错误');
+            button.removeAttribute('disabled');
+            button.textContent = '登录';
+          } else {
+            window.location.replace(redirectUrl || '/');
+          }
+        })
+        .catch(() => {
+          showError('登录失败，请稍后重试');
+          button.removeAttribute('disabled');
+          button.textContent = '登录';
+        });
+    });
+
+    usernameInput.addEventListener('input', hideError);
+    passwordInput.addEventListener('input', hideError);
+  })();
+</script>
+</body>
+</html>
