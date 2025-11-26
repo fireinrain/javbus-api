@@ -181,6 +181,7 @@
   </div>
 </div>
 
+
 <div class="container">
 
   <!-- Hero -->
@@ -189,7 +190,20 @@
     <p>RESTful API 服务，提供影片数据与磁力链接。如果您看到这个页面，说明服务正常运行！</p>
     <a class="btn" href="https://github.com/ovnrain/javbus-api#readme" target="_blank">查看完整文档</a>
   </div>
-
+  <!-- JavBus 访问状态页脚 -->
+  <div id="javbus-footer" style="
+    display:none;
+    text-align: center;
+    font-size: 1rem;
+    color: #444;
+">
+    <div id="javbus-status" style="
+      padding: 10px 18px;
+      border-radius: 12px;
+      display: inline-block;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  "></div>
+  </div>
   <!-- API 区域 -->
   <div class="card api-section">
     <h2>API 示例</h2>
@@ -240,6 +254,8 @@
     </div>
 
   </div>
+
+
 </div>
 
 <script>
@@ -256,6 +272,8 @@
           username.textContent = res.username;
           user.style.display = "flex";
           login.style.display = "none";
+          //更新 JavBus 访问状态
+          checkJavbus();
         }
       });
 
@@ -263,7 +281,43 @@
       fetch('/api/logout', {method: 'POST'})
         .then(() => location.reload());
     });
+
+    function checkJavbus() {
+      fetch('/api/accessJavbus')
+        .then(res => res.json())
+        .then(data => {
+          const footer = document.getElementById("javbus-footer");
+          const bar = document.getElementById("javbus-status");
+
+          footer.style.display = "block";
+
+          if (data.access) {
+            bar.style.background = "#e6f9ed";
+            bar.style.color = "#0b7a36";
+            bar.innerHTML = `✔ javbus.com 可访问`;
+          } else {
+            bar.style.background = "#fdeaea";
+            bar.style.color = "#b30000";
+            bar.innerHTML =
+              `✘ javbus.com 不可访问<br><small>${data.message || ''}</small>`;
+          }
+        })
+        .catch(err => {
+          const footer = document.getElementById("javbus-footer");
+          const bar = document.getElementById("javbus-status");
+
+          footer.style.display = "block";
+          bar.style.background = "#fdeaea";
+          bar.style.color = "#b30000";
+          bar.innerHTML =
+            `✘ javbus.com 不可访问<br><small>${err}</small>`;
+        });
+    }
+
+
   })();
+
+
 </script>
 </body>
 </html>
