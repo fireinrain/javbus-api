@@ -525,7 +525,6 @@ func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 // GetImageDimensions 获取图片尺寸而不下载全图
 func getImageDimensions(client *resty.Client, url string, pageUrl string) (int, int, string, error) {
 	// 关键点 1: SetDoNotParseResponse(true)
-	//TODO need fix
 	// 告诉 Resty 不要自动读取和关闭 Body，把 Body 的控制权交给我们
 	// 这样我们就可以像操作文件流一样操作网络流
 	headers := shallowCopyMap(ReqHeaders)
