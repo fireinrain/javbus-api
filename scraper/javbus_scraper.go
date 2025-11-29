@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"io"
+	_ "image/jpeg"
+	_ "image/png"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	//_ "golang.org/x/image/webp"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/dustin/go-humanize"
@@ -528,8 +530,9 @@ func getImageDimensions(client *resty.Client, url string, pageUrl string) (int, 
 	// 这样我们就可以像操作文件流一样操作网络流
 	headers := shallowCopyMap(ReqHeaders)
 	headers["Referer"] = pageUrl
-	headers["Range"] = "bytes=0-8224"
+	headers["Range"] = "bytes=0-512"
 	headers["Cookie"] = ""
+	headers["Accept"] = "image/webp,image/apng,image/*,*/*;q=0.8"
 	resp, err := client.R().SetHeaders(headers).
 		SetDoNotParseResponse(true).
 		// 可选优化: 加上 Range 头，只请求前 32KB 数据。
@@ -547,17 +550,27 @@ func getImageDimensions(client *resty.Client, url string, pageUrl string) (int, 
 	if resp.StatusCode() != 200 && resp.StatusCode() != 206 {
 		return 0, 0, "", fmt.Errorf("http status: %d", resp.StatusCode())
 	}
-
 	// 4. 为了保险，先读取到内存 (32KB 很小，不会炸内存)
 	// 直接传 resp.RawBody() 给 DecodeConfig 有时会因为网络包导致的 reader 行为差异而出错
 	// 读成 []byte 最稳。
-	data, err := io.ReadAll(resp.RawBody())
-	if err != nil {
-		return 0, 0, "", err
-	}
+	//data, err := io.ReadAll(resp.RawBody())
+	//if err != nil {
+	//	return 0, 0, "", err
+	//}
+	//fmt.Println("----- 诊断报告 -----")
+	//fmt.Printf("HTTP 状态码: %d\n", resp.StatusCode())
+	//fmt.Printf("Content-Type: %s\n", resp.Header().Get("Content-Type"))
+	//fmt.Printf("实际读取字节数: %d\n", len(data))
+	//fmt.Printf("前 50 字节 (Hex): %x\n", data[:50])
+	//fmt.Printf("前 50 字节 (String): %s\n", string(data[:50]))
+	//fmt.Println("-------------------")
 
 	// 5. 解析
-	config, format, err := image.DecodeConfig(bytes.NewReader(data))
+	config, format, err := image.DecodeConfig(resp.RawBody())
+	//fmt.Println("解析结果: ", err)
+	//fmt.Printf("宽度: %d\n", config.Width)
+	//fmt.Printf("高度: %d\n", config.Height)
+	//fmt.Printf("格式: %s\n", format)
 	if err != nil {
 		// 如果这里还报错，说明不是 Go 支持的格式 (JPG/PNG/GIF/WebP)
 		// 或者 32KB 依然不够 (极少见)
