@@ -3,6 +3,8 @@ package scraper
 import (
 	"bytes"
 	"fmt"
+	"image"
+	"io"
 	"regexp"
 	"sort"
 	"strconv"
@@ -279,13 +281,50 @@ func parseMoviesPage(doc *goquery.Document) *model.MoviesPage {
 // 对应 getMovieDetail
 // GetMovieDetail 获取详情
 
+var ReqHeaders = map[string]string{
+	"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+	// "Accept-Encoding":          "gzip, deflate, br, zstd", // 建议注释掉，让 Go 自动处理 gzip。强行加 br 可能会导致乱码。
+	"Cache-Control":               "no-cache",
+	"Pragma":                      "no-cache",
+	"Priority":                    "u=0, i",
+	"Sec-Ch-Ua":                   `"Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"`,
+	"Sec-Ch-Ua-Arch":              `"x86"`,
+	"Sec-Ch-Ua-Bitness":           `"64"`,
+	"Sec-Ch-Ua-Full-Version":      `"142.0.7444.176"`,
+	"Sec-Ch-Ua-Full-Version-List": `"Chromium";v="142.0.7444.176", "Google Chrome";v="142.0.7444.176", "Not_A Brand";v="99.0.0.0"`,
+	"Sec-Ch-Ua-Mobile":            "?0",
+	"Sec-Ch-Ua-Model":             `""`,
+	"Sec-Ch-Ua-Platform":          `"macOS"`,
+	"Sec-Ch-Ua-Platform-Version":  `"12.7.0"`,
+	"Sec-Fetch-Dest":              "document",
+	"Sec-Fetch-Mode":              "navigate",
+	"Sec-Fetch-Site":              "none",
+	"Sec-Fetch-User":              "?1",
+	"Upgrade-Insecure-Requests":   "1",
+	"User-Agent":                  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+}
+
+// 浅拷贝示例
+func shallowCopyMap(original map[string]string) map[string]string {
+	// 创建新map，大小为原map的长度
+	newMap := make(map[string]string, len(original))
+
+	// 遍历原map并复制键值对
+	for key, value := range original {
+		newMap[key] = value
+	}
+	return newMap
+}
+
 func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 	url := fmt.Sprintf("%s/%s", consts.JavBusURL, id)
-
+	var cookieStr = ""
+	headerMap := shallowCopyMap(ReqHeaders)
+	headerMap["Cookie"] = cookieStr
 	// 这里需要原始 HTML 字符串来做正则匹配 (gid/uc)，所以不能只用 goquery
 	// 为了复用 requestDocument 的逻辑，我们可以稍作修改，或者这里单独发请求
 	// 为了简单，我们先获取 Document，再获取 HTML 字符串
-	doc, err := s.requestDocument(url, nil)
+	doc, err := s.requestDocument(url, headerMap)
 	if err != nil {
 		return nil, err
 	}
@@ -303,6 +342,13 @@ func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 		// shharn/imagesize 库使用
 		// 也可以自己实现只下载前几 KB
 		// 为了不阻塞太久，可以在这里开个协程或者设置短超时
+		width, height, _, err := getImageDimensions(s.Client, imgURL, url)
+		if err == nil {
+			imageSize = &model.ImageSize{
+				Width:  width,
+				Height: height,
+			}
+		}
 		// 这里简化处理，暂不实现复杂的 Probe 逻辑，因为 Go 的 image 包需要下载 Body
 		// 如果必须，可以使用 s.Client 发起 Range 请求
 	}
@@ -380,20 +426,24 @@ func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 		if s.Find(".genre").Length() > 0 && s.Find("span[onmouseover]").Length() == 0 {
 			s.Find(".genre").Each(func(j int, g *goquery.Selection) {
 				a := g.Find("label a")
-				name := a.Text()
-				href := a.AttrOr("href", "")
-				id := strings.Split(href, "/genre/")[1] // 简化提取
-				genres = append(genres, model.Property{ID: id, Name: name})
+				if a != nil && a.Length() > 0 {
+					name := a.Text()
+					href := a.AttrOr("href", "")
+					id := strings.Split(href, "/genre/")[1] // 简化提取
+					genres = append(genres, model.Property{ID: id, Name: name})
+				}
 			})
 		}
 		// Stars (hover trigger)
 		if s.Find(".genre").Length() > 0 && s.Find("span[onmouseover]").Length() > 0 {
 			s.Find(".genre").Each(func(j int, g *goquery.Selection) {
 				a := g.Find("a")
-				name := a.Text()
-				href := a.AttrOr("href", "")
-				id := strings.Split(href, "/star/")[1]
-				stars = append(stars, model.Property{ID: id, Name: name})
+				if a != nil && a.Length() > 0 {
+					name := a.Text()
+					href := a.AttrOr("href", "")
+					id := strings.Split(href, "/star/")[1] // 简化提取
+					stars = append(stars, model.Property{ID: id, Name: name})
+				}
 			})
 		}
 	})
@@ -468,6 +518,53 @@ func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 		GID:           gidStr,
 		UC:            ucStr,
 	}, nil
+}
+
+// GetImageDimensions 获取图片尺寸而不下载全图
+func getImageDimensions(client *resty.Client, url string, pageUrl string) (int, int, string, error) {
+	// 关键点 1: SetDoNotParseResponse(true)
+	//TODO need fix
+	// 告诉 Resty 不要自动读取和关闭 Body，把 Body 的控制权交给我们
+	// 这样我们就可以像操作文件流一样操作网络流
+	headers := shallowCopyMap(ReqHeaders)
+	headers["Referer"] = pageUrl
+	headers["Range"] = "bytes=0-8224"
+	headers["Cookie"] = ""
+	resp, err := client.R().SetHeaders(headers).
+		SetDoNotParseResponse(true).
+		// 可选优化: 加上 Range 头，只请求前 32KB 数据。
+		// 大多数图片头部都在前几 KB，但这取决于服务器是否支持 Range。
+		// 如果不加这个头，Resty 会发起全量 Get，但我们靠下方的 Close() 提前掐断连接。
+		// SetHeader("Range", "bytes=0-32768").
+		Get(url)
+
+	if err != nil {
+		return 0, 0, "", err
+	}
+	defer resp.RawBody().Close()
+
+	// 检查状态码 (206 Partial Content 是成功的标志)
+	if resp.StatusCode() != 200 && resp.StatusCode() != 206 {
+		return 0, 0, "", fmt.Errorf("http status: %d", resp.StatusCode())
+	}
+
+	// 4. 为了保险，先读取到内存 (32KB 很小，不会炸内存)
+	// 直接传 resp.RawBody() 给 DecodeConfig 有时会因为网络包导致的 reader 行为差异而出错
+	// 读成 []byte 最稳。
+	data, err := io.ReadAll(resp.RawBody())
+	if err != nil {
+		return 0, 0, "", err
+	}
+
+	// 5. 解析
+	config, format, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		// 如果这里还报错，说明不是 Go 支持的格式 (JPG/PNG/GIF/WebP)
+		// 或者 32KB 依然不够 (极少见)
+		return 0, 0, "", fmt.Errorf("解析错误: %v (请检查是否引入了 x/image/webp)", err)
+	}
+
+	return config.Width, config.Height, format, nil
 }
 
 // 对应 getStarInfo

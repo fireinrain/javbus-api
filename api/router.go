@@ -22,6 +22,8 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 
 	//是否可以访问javbus
 	r.GET("/accessJavbus", GetAccessJavbus)
+
+	//javbus api
 	movies := r.Group("/movies")
 	{
 		movies.GET("/", GetMovies)

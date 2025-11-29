@@ -25,7 +25,7 @@ SOCKS5_PROXY = ""
 ADMIN_USERNAME = "admin"
 
 # 管理员密码
-ADMIN_PASSWORD = "password123"
+ADMIN_PASSWORD = "admin"
 
 
 [auth]

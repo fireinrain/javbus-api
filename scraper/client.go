@@ -97,6 +97,8 @@ func NewRestyClient(cfg *config.Config) *resty.Client {
 	// 创建resty客户端实例
 	client := resty.New()
 	client.SetTimeout(consts.JavBusTimeout)
+	client.SetHeader("User-Agent", consts.UserAgent)
+	client.SetHeader("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7")
 
 	proxyStr := cfg.Proxy.HttpProxy
 	if proxyStr != "" {
