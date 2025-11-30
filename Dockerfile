@@ -22,8 +22,7 @@ RUN go version
 
 # 下载依赖（利用缓存层）
 RUN echo "正在下载依赖..."
-RUN go mod download
-RUN go mod tidy
+RUN go mod download && go mod tidy
 
 # 复制所有源代码
 COPY . .

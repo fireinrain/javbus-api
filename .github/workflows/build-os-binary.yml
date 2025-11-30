@@ -44,7 +44,9 @@ jobs:
           cache: true
 
       - name: Download dependencies
-        run: go mod download
+        run: |
+          go mod download \
+          go mod tidy
 
       - name: Build binary
         run: |
