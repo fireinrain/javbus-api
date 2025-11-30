@@ -13,24 +13,12 @@ RUN apk add --no-cache git
 
 # 创建工作目录
 WORKDIR /build
-
-# 1. 复制 go.mod 和 go.sum (利用 Docker 缓存机制)
-# 只要这两个文件没变，下面的 download 就不会重复执行，加快构建
-COPY go.mod go.sum ./
-
-# 2. 先下载依赖
-RUN go mod download
-
 # 3. 复制所有源代码 (这一步必须在 tidy 之前)
 COPY . .
 
 # 4. 【关键修正】源码复制进去后，再执行 tidy
 # 确保所有依赖都被正确解析并补全
-RUN go mod tidy
-
-# 5. 编译应用程序
-RUN echo "正在编译应用..."
-RUN go build -v -ldflags="-s -w" -o javbus-api .
+RUN go mod tidy && echo "正在编译应用..." && go build -v -ldflags="-s -w" -o javbus-api .
 
 # 第二阶段：运行阶段
 FROM alpine:latest
