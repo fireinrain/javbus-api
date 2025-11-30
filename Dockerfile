@@ -1,6 +1,6 @@
 # 第一阶段：构建阶段
 # 使用具体版本的Go镜像，确保与go.mod中的版本兼容
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # 设置Go环境变量
 ENV GO111MODULE=on \
