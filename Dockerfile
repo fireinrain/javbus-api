@@ -1,8 +1,8 @@
 # 第一阶段：构建阶段
-# 使用具体版本的Go镜像，确保与go.mod中的版本兼容
 FROM golang:1.24-alpine AS builder
 
 # 设置Go环境变量
+# 注意：如果你是在 M1/M2 Mac 上构建并部署到 Linux 服务器，保持 GOARCH=amd64 是对的
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
@@ -14,24 +14,25 @@ RUN apk add --no-cache git
 # 创建工作目录
 WORKDIR /build
 
-# 复制go.mod和go.sum文件
-COPY go.mod ./
+# 1. 复制 go.mod 和 go.sum (利用 Docker 缓存机制)
+# 只要这两个文件没变，下面的 download 就不会重复执行，加快构建
+COPY go.mod go.sum ./
 
-# 打印Go版本信息用于调试
-RUN go version
+# 2. 先下载依赖
+RUN go mod download
 
-# 下载依赖（利用缓存层）
-RUN echo "正在下载依赖..."
-RUN go mod download && go mod tidy
-
-# 复制所有源代码
+# 3. 复制所有源代码 (这一步必须在 tidy 之前)
 COPY . .
 
-# 编译应用程序，禁用CGO以支持alpine基础镜像
+# 4. 【关键修正】源码复制进去后，再执行 tidy
+# 确保所有依赖都被正确解析并补全
+RUN go mod tidy
+
+# 5. 编译应用程序
 RUN echo "正在编译应用..."
 RUN go build -v -ldflags="-s -w" -o javbus-api .
 
-# 第二阶段：运行阶段 - 使用alpine作为基础镜像
+# 第二阶段：运行阶段
 FROM alpine:latest
 
 # 添加时区包和证书
@@ -44,6 +45,7 @@ WORKDIR /app
 COPY --from=builder /build/javbus-api /app/
 
 # 复制必要的配置文件
+# 注意：请确保 config.toml 和 .env.sample 真的存在于你本地目录，否则会报错
 COPY config.toml /app/
 COPY .env.sample /app/.env
 
