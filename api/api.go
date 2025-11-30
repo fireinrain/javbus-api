@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -16,7 +14,7 @@ import (
 	//"your-project/internal/handler"           // 假设原本的 router.js 逻辑在这里
 )
 
-func RunApiServer(cfg *config.Config) {
+func SetupRouter(cfg *config.Config) *gin.Engine {
 	// 设置 Gin 模式
 	if cfg.Server.DebugLevel == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -166,10 +164,7 @@ func RunApiServer(cfg *config.Config) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 	})
 
-	// 启动服务
-	addr := fmt.Sprintf(":%d", cfg.Server.ServerPort)
-	log.Printf("Server starting on %s", addr)
-	r.Run(addr)
+	return r
 }
 
 // AuthMiddleware 核心鉴权逻辑
