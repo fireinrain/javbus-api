@@ -125,8 +125,8 @@ type StarInfo struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Birthday string `json:"birthday"` // nullable
-	Age      int    `json:"age"`      // nullable
-	Height   int    `json:"height"`   // nullable
+	Age      string `json:"age"`      // nullable
+	Height   string `json:"height"`   // nullable
 
 	// 胸围
 	Bust string `json:"bust"` // nullable

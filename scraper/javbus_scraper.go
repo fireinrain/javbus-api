@@ -656,7 +656,7 @@ func parseStarInfo(doc *goquery.Document, starId string) *model.StarInfo {
 	}
 
 	// Helper: 根据前缀查找并转为数字 (返回 *int)
-	getInt := func(prefix string) int {
+	_ = func(prefix string) int {
 		strVal := getText(prefix)
 		if strVal != "" {
 			if intVal, err := strconv.Atoi(strVal); err == nil {
@@ -673,8 +673,8 @@ func parseStarInfo(doc *goquery.Document, starId string) *model.StarInfo {
 		Name:       name,
 		Avatar:     avatarPtr,
 		Birthday:   getText("生日: "),
-		Age:        getInt("年齡: "), // model 中 Age 是 int
-		Height:     getInt("身高: "), // model 中 Height 是 int
+		Age:        getText("年齡: "), // model 中 Age 是 int
+		Height:     getText("身高: "), // model 中 Height 是 int
 		Bust:       getText("胸圍: "),
 		Waistline:  getText("腰圍: "),
 		Hipline:    getText("臀圍: "),
