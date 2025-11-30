@@ -1,5 +1,6 @@
 # 第一阶段：构建阶段
-FROM golang:alpine AS builder
+# 使用具体版本的Go镜像，确保与go.mod中的版本兼容
+FROM golang:1.21-alpine AS builder
 
 # 设置Go环境变量
 ENV GO111MODULE=on \
@@ -7,24 +8,35 @@ ENV GO111MODULE=on \
     GOOS=linux \
     GOARCH=amd64
 
+# 安装构建所需的依赖
+RUN apk add --no-cache git
+
 # 创建工作目录
 WORKDIR /build
 
-# 复制go.mod和go.sum文件，下载依赖（利用缓存层）
+# 复制go.mod和go.sum文件
 COPY go.mod ./
+
+# 打印Go版本信息用于调试
+RUN go version
+
+# 下载依赖（利用缓存层）
+RUN echo "正在下载依赖..."
 RUN go mod download
+RUN go mod tidy
 
 # 复制所有源代码
 COPY . .
 
 # 编译应用程序，禁用CGO以支持alpine基础镜像
-RUN go build -ldflags="-s -w" -o javbus-api .
+RUN echo "正在编译应用..."
+RUN go build -v -ldflags="-s -w" -o javbus-api .
 
 # 第二阶段：运行阶段 - 使用alpine作为基础镜像
 FROM alpine:latest
 
-# 添加时区包
-RUN apk --no-cache add tzdata
+# 添加时区包和证书
+RUN apk --no-cache add tzdata ca-certificates
 
 # 设置工作目录
 WORKDIR /app
