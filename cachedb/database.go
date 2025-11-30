@@ -7,6 +7,7 @@ import (
 
 	"github.com/fireinrain/javbus-api/config"
 	"github.com/fireinrain/javbus-api/utils"
+	_ "github.com/glebarez/sqlite" // pure Go SQLite driver
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
