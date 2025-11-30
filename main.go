@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -39,7 +40,7 @@ func main() {
 	}
 	// 启动服务
 	log.Printf("Server starting on %s", addr)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(fmt.Sprintf("Server failed: %v", err))
 	}
 
