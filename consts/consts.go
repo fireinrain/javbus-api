@@ -14,6 +14,8 @@ const (
 	JavBusTimeout = 5 * time.Second
 
 	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+	// CacheExpire 缓存过期时间
+	CacheExpire = 3 * time.Hour
 )
 
 // PageReg 用于校验页码: 必须以 1-9 开头，后面跟任意数字

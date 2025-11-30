@@ -96,10 +96,20 @@ func NewHTTPClient(cfg *config.Config) *http.Client {
 func NewRestyClient(cfg *config.Config) *resty.Client {
 	// 创建resty客户端实例
 	client := resty.New()
+	// 连接池设置
+	client.SetRetryCount(3)
+	client.SetRetryWaitTime(500 * time.Millisecond)
+	client.SetRetryMaxWaitTime(2 * time.Second)
 	client.SetTimeout(consts.JavBusTimeout)
 	client.SetHeader("User-Agent", consts.UserAgent)
 	client.SetHeader("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7")
 
+	// 设置连接池
+	client.SetTransport(&http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 50,
+		IdleConnTimeout:     90 * time.Second,
+	})
 	proxyStr := cfg.Proxy.HttpProxy
 	if proxyStr != "" {
 		client.SetProxy(proxyStr)

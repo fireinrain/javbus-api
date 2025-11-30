@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -10,10 +11,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
+
 	//_ "golang.org/x/image/webp"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/dustin/go-humanize"
+	"github.com/fireinrain/javbus-api/cachedb"
 	"github.com/fireinrain/javbus-api/config"
 	"github.com/fireinrain/javbus-api/consts"
 	"github.com/fireinrain/javbus-api/model"
@@ -50,6 +54,11 @@ var starInfoMap = map[string]string{
 
 // 对应 Node.js 的 /^(?:第\d+?頁 - )?(.+?) - /
 var titleRegex = regexp.MustCompile(`^(?:第\d+?頁 - )?(.+?) - `)
+
+var (
+	// 缓存实例
+	memCache = cachedb.NewCache(3*time.Hour, 1*time.Hour)
+)
 
 type JavbusScraper struct {
 	SiteUrl string
@@ -376,6 +385,15 @@ func getImageDimensions(client *resty.Client, url string, pageUrl string) (int, 
 }
 
 func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
+	// 1. 先检查缓存
+	cacheKey := "movie:" + id
+	if cachedData, found := memCache.Get(cacheKey); found {
+		if detail, ok := cachedData.(*model.MovieDetail); ok {
+			return detail, nil
+		}
+	}
+
+	// 2. 缓存未命中，发起请求
 	url := fmt.Sprintf("%s/%s", consts.JavBusURL, id)
 	var cookieStr = ""
 	headerMap := shallowCopyMap(ReqHeaders)
@@ -395,21 +413,41 @@ func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 	bigImg := doc.Find(".container .movie .bigImage img").AttrOr("src", "")
 	imgURL := utils.FormatImageURL(bigImg)
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	// 2. 图片尺寸探测 (Probe)
 	var imageSize *model.ImageSize
 	if imgURL != "" {
 		// shharn/imagesize 库使用
 		// 也可以自己实现只下载前几 KB
 		// 为了不阻塞太久，可以在这里开个协程或者设置短超时
-		width, height, _, err := getImageDimensions(s.Client, imgURL, url)
-		if err == nil {
-			imageSize = &model.ImageSize{
-				Width:  width,
-				Height: height,
+		// 3. 使用超时控制的请求
+		imgChan := make(chan struct {
+			width, height int
+			format        string
+			err           error
+		}, 1)
+		go func() {
+			defer close(imgChan)
+			width, height, _, err := getImageDimensions(s.Client, imgURL, url)
+			imgChan <- struct {
+				width, height int
+				format        string
+				err           error
+			}{width, height, "", err}
+		}()
+		// 处理图片尺寸结果（带超时控制）
+		select {
+		case result := <-imgChan:
+			if result.err == nil {
+				imageSize = &model.ImageSize{
+					Width:  result.width,
+					Height: result.height,
+				}
 			}
+		case <-ctx.Done():
+			// 超时则跳过图片尺寸处理
 		}
-		// 这里简化处理，暂不实现复杂的 Probe 逻辑，因为 Go 的 image 包需要下载 Body
-		// 如果必须，可以使用 s.Client 发起 Range 请求
 	}
 
 	// 3. 基础信息解析
@@ -559,7 +597,7 @@ func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 		})
 	})
 
-	return &model.MovieDetail{
+	movieDetail := &model.MovieDetail{
 		ID:            id,
 		Title:         title,
 		Img:           imgURL,
@@ -576,7 +614,10 @@ func (s *JavbusScraper) GetMovieDetail(id string) (*model.MovieDetail, error) {
 		SimilarMovies: similar,
 		GID:           gidStr,
 		UC:            ucStr,
-	}, nil
+	}
+	// 3. 缓存结果
+	memCache.Set(cacheKey, movieDetail, consts.CacheExpire)
+	return movieDetail, nil
 }
 
 // 对应 getStarInfo
@@ -686,6 +727,12 @@ func parseStarInfo(doc *goquery.Document, starId string) *model.StarInfo {
 // 对应 getMovieMagnets
 // GetMovieMagnets 获取磁力链接 (Ajax)
 func (s *JavbusScraper) GetMovieMagnets(movieId, gid, uc, sortBy, sortOrder string) ([]model.Magnet, error) {
+	cacheKey := "mag:" + movieId + ":" + gid + ":" + uc + ":" + sortBy + ":" + sortOrder
+	if cachedData, found := memCache.Get(cacheKey); found {
+		if detail, ok := cachedData.([]model.Magnet); ok {
+			return detail, nil
+		}
+	}
 	// 1. 使用 Resty 发起请求
 	// Resty 会自动处理 URL 参数编码，不需要手动 fmt.Sprintf 拼接参数
 	resp, err := s.Client.R().
@@ -820,7 +867,8 @@ func (s *JavbusScraper) GetMovieMagnets(movieId, gid, uc, sortBy, sortOrder stri
 		}
 		return valA > valB
 	})
-
+	//set cache
+	memCache.Set(cacheKey, magnets, consts.CacheExpire)
 	return magnets, nil
 }
 
