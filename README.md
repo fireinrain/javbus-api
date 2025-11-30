@@ -106,7 +106,7 @@ JAVBUS_SESSION_SECRET=your_session_secret
 
 ### 2. 使用 Token
 
-这种方式需要在请求头中添加 `j-auth-token` 字段，值为 `your_token`
+这种方式需要在请求头中添加 `Authorization` 字段，值为 `Bearer your_config_jwt_token`
 
 设置以下环境变量：
 
