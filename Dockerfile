@@ -11,7 +11,7 @@ ENV GO111MODULE=on \
 WORKDIR /build
 
 # 复制go.mod和go.sum文件，下载依赖（利用缓存层）
-COPY go.mod go.sum ./
+COPY go.mod ./
 RUN go mod download
 
 # 复制所有源代码
