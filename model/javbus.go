@@ -201,3 +201,21 @@ type GenresPage struct {
 	GenreName string     `json:"genreName"`
 	GenreTags []GenreTag `json:"genreTags"`
 }
+
+type MoviePreview struct {
+	ID    string   `json:"id"`
+	Link  string   `json:"link"`
+	Title string   `json:"title"`
+	Img   string   `json:"img"` // nullable
+	Date  string   `json:"date"`
+	Tags  []string `json:"tags"`
+}
+
+// 标签页下的作品preview
+type GenreMoviesPreview struct {
+	GenreId       string         `json:"genreId"`
+	MoviePreviews []MoviePreview `json:"movies"`
+	Total         int            `json:"total"`
+	Page          int            `json:"page"`
+	PageSize      int            `json:"pageSize"`
+}

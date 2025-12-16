@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/fireinrain/javbus-api/config"
@@ -47,10 +48,45 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	{
 		//获取所有类别
 		genres.GET("/", GetAllGenres)
-		//获取指定类别下的所有电影
-		//genres.GET("/:genreId", GetMoviesByGenre)
+		//获取指定类别下的所有电影 支持分页 但是默认pageSize=30
+		genres.GET("/:genreId/:page", GetMoviesByGenre)
 	}
 
+}
+
+func GetMoviesByGenre(context *gin.Context) {
+	genreId := strings.TrimSpace(context.Param("genreId"))
+	if genreId == "" {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "genreId is required"})
+		return
+	}
+	//获取page参数
+	//默认page=1
+	page := context.Param("page")
+	//转换为int
+	pageInt, err := strconv.Atoi(strings.TrimSpace(page))
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "page must be an integer"})
+		return
+	}
+	if pageInt < 1 {
+		pageInt = 1
+	}
+	//获取是否查询带磁力链接标志existmag=all/mag
+	existMag := context.DefaultQuery("mag", "1")
+	//判断是否查询带磁力链接
+	if existMag == "1" {
+		existMag = "mag"
+	} else {
+		existMag = "all"
+	}
+	// 调用 scraper
+	resp, err := JavbusScraper.GetMoviesByGenre(genreId, pageInt, existMag)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, resp)
 }
 
 func GetAllGenres(context *gin.Context) {

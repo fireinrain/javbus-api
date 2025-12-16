@@ -7,6 +7,7 @@ import (
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
+	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
@@ -942,4 +943,81 @@ func (s *JavbusScraper) GetAllGenres() ([]model.GenresPage, error) {
 	//set cache
 	memCache.Set(cacheKey, genres, consts.CacheExpire)
 	return genres, nil
+}
+
+func (s *JavbusScraper) GetMoviesByGenre(id string, pageInt int, mag string) (model.GenreMoviesPreview, error) {
+	result := model.GenreMoviesPreview{}
+	headers := map[string]string{
+		"User-Agent": consts.UserAgent,
+		"Referer":    "https://www.javbus.com",
+	}
+	// 1. 构建URL
+	url := fmt.Sprintf("%s/genre/%s/%d", consts.JavBusURL, id, pageInt)
+	// 2. 发起请求
+	h := &http.Cookie{
+		Name:  "existmag",
+		Value: mag,
+	}
+	resp, err := s.Client.R().
+		SetHeaders(headers).
+		SetCookie(h).
+		Get(url)
+	if err != nil {
+		return model.GenreMoviesPreview{}, err
+	}
+	//设置genreId
+	result.GenreId = id
+	result.PageSize = 30
+	//设置page
+	result.Page = pageInt
+
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp.Body()))
+	if err != nil {
+		return model.GenreMoviesPreview{}, err
+	}
+	//查找总数量
+	var totalCount string
+	if mag == "mag" {
+		totalCount = doc.Find("#resultshowmag").Text()
+	} else {
+		totalCount = doc.Find("#resultshowall").Text()
+	}
+	//匹配totalCount字符串中的连续数字
+	//使用正则表达式匹配连续数字
+	re := regexp.MustCompile(`\d+`)
+	matches := re.FindStringSubmatch(totalCount)
+	if len(matches) > 0 {
+		atoi, err := strconv.Atoi(matches[0])
+		if err != nil {
+			return model.GenreMoviesPreview{}, err
+		}
+		result.Total = atoi
+	}
+	var movies []model.MoviePreview
+	doc.Find("#waterfall > div > a").Each(func(i int, s *goquery.Selection) {
+		//解析movieId
+		var movie model.MoviePreview
+		movieLink := s.AttrOr("href", "")
+		movie.Link = movieLink
+		movieId := strings.ReplaceAll(movieLink, consts.JavBusURL+"/", "")
+		movie.ID = movieId
+		title := s.Find("div.photo-frame > img").AttrOr("title", "")
+		movie.Title = title
+		//解析img
+		img, exists := s.Find("div > img").Attr("src")
+		if exists {
+			movie.Img = utils.FormatImageURL(img)
+		}
+		tags := s.Find("div.photo-info > span > div").Text()
+		tags = strings.ReplaceAll(tags, "\t", "")
+		tags = strings.ReplaceAll(tags, "\n", "")
+		movie.Tags = strings.Fields(tags)
+		//解析date
+		date := s.Find("div.photo-info > span > date:nth-child(4)").Text()
+		movie.Date = date
+		movies = append(movies, movie)
+	})
+	// 3. 解析文档
+	result.MoviePreviews = movies
+	return result, nil
 }
