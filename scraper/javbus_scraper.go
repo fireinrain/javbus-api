@@ -901,6 +901,13 @@ func (s *JavbusScraper) GetAccessJavbus() (*model.JavbusAccessStatus, error) {
 }
 
 func (s *JavbusScraper) GetAllGenres() ([]model.GenresPage, error) {
+	cacheKey := "genre:all"
+	if cachedData, found := memCache.Get(cacheKey); found {
+		if detail, ok := cachedData.([]model.GenresPage); ok {
+
+			return detail, nil
+		}
+	}
 	resp, err := s.Client.R().
 		SetHeader("User-Agent", consts.UserAgent).
 		Get(consts.JavBusURL + "/genre")
@@ -932,5 +939,7 @@ func (s *JavbusScraper) GetAllGenres() ([]model.GenresPage, error) {
 			GenreTags: tags,
 		})
 	})
+	//set cache
+	memCache.Set(cacheKey, genres, consts.CacheExpire)
 	return genres, nil
 }
