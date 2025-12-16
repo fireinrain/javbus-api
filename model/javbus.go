@@ -189,3 +189,15 @@ type JavbusAccessStatus struct {
 	Access  bool   `json:"access"`
 	Message string `json:"message"`
 }
+
+// 标签
+type GenreTag struct {
+	Name string `json:"name"`
+	Id   string `json:"id"`
+}
+
+// 类别页
+type GenresPage struct {
+	GenreName string     `json:"genreName"`
+	GenreTags []GenreTag `json:"genreTags"`
+}

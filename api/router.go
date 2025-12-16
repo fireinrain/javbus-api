@@ -42,7 +42,20 @@ func RegisterRoutes(r *gin.RouterGroup, cfg *config.Config) {
 	{
 		magnets.GET("/:movieId", GetMovieMagnets)
 	}
+	// 挂载 /genres 路由组
+	genres := r.Group("/genre")
+	{
+		//获取所有类别
+		genres.GET("/", GetAllGenres)
+		//获取指定类别下的所有电影
+		//genres.GET("/:genreId", GetMoviesByGenre)
+	}
 
+}
+
+func GetAllGenres(context *gin.Context) {
+	resp, _ := JavbusScraper.GetAllGenres()
+	context.JSON(http.StatusOK, resp)
 }
 
 func GetAccessJavbus(c *gin.Context) {

@@ -899,3 +899,38 @@ func (s *JavbusScraper) GetAccessJavbus() (*model.JavbusAccessStatus, error) {
 		Message: fmt.Sprintf("you may need use proxy for access javbus.com: %v", err),
 	}, nil
 }
+
+func (s *JavbusScraper) GetAllGenres() ([]model.GenresPage, error) {
+	resp, err := s.Client.R().
+		SetHeader("User-Agent", consts.UserAgent).
+		Get(consts.JavBusURL + "/genre")
+	if err != nil {
+		return nil, err
+	}
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp.Body()))
+	if err != nil {
+		return nil, err
+	}
+
+	var genres []model.GenresPage
+	//解析
+	doc.Find("body > div.container-fluid.pt10 > h4").Each(func(i int, s *goquery.Selection) {
+		genreName := s.Text()
+		var tags []model.GenreTag
+		_ = s.Next().Find("a").Each(func(i int, s *goquery.Selection) {
+			tagName := s.Text()
+			tagId := s.AttrOr("href", "")
+			tagId = strings.ReplaceAll(tagId, consts.JavBusURL+"/genre/", "")
+			tags = append(tags, model.GenreTag{
+				Name: tagName,
+				Id:   tagId,
+			})
+
+		})
+		genres = append(genres, model.GenresPage{
+			GenreName: genreName,
+			GenreTags: tags,
+		})
+	})
+	return genres, nil
+}
