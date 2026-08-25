@@ -119,7 +119,7 @@ func NewRestyClient(cfg *config.Config) *resty.Client {
 		client.SetProxy(proxyHttpsStr)
 	}
 	proxySocksStr := cfg.Proxy.Socks5Proxy
-	if proxyStr != "" {
+	if proxySocksStr != "" {
 		client.SetProxy(proxySocksStr)
 	}
 
