@@ -2,14 +2,15 @@
 FROM golang:1.24-alpine AS builder
 
 # 设置Go环境变量
-# 注意：如果你是在 M1/M2 Mac 上构建并部署到 Linux 服务器，保持 GOARCH=amd64 是对的
+# 注意：go-sqlite3 依赖 CGO，必须保持 CGO_ENABLED=1，否则运行时报错：
+# "Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work"
+# 如需交叉构建其他架构镜像，请使用 docker buildx --platform，不要硬编码 GOOS/GOARCH
+# （CGO 项目硬编码 GOARCH 会导致交叉编译 C 代码失败或产物无法运行）
 ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64
+    CGO_ENABLED=1
 
-# 安装构建所需的依赖
-RUN apk add --no-cache git
+# 安装构建所需的依赖（gcc/musl-dev 是编译 go-sqlite3 必需的）
+RUN apk add --no-cache git gcc musl-dev
 
 # 创建工作目录
 WORKDIR /build
